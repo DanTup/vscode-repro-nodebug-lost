@@ -52,11 +52,19 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
+		"*",
 		"onDebug",
 		"onDebugDynamicConfigurations:mock",
-		"onCommand:extension.mock-debug.getProgramName"
+		"onCommand:extension.mock-debug.runWithoutDebugging"
 	],
 	"contributes": {
+		"commands": [
+			{
+				"category": "MockDebug",
+				"command": "extension.mock-debug.runWithoutDebugging",
+				"title": "Run without debugging"
+			}
+		],
 		"breakpoints": [
 			{
 				"language": "markdown"
@@ -78,6 +86,10 @@
 								"type": "string",
 								"description": "Absolute path to a text file.",
 								"default": "${workspaceFolder}/${command:AskForProgramName}"
+							},
+							"args": {
+								"type": "array",
+								"description": "Args"
 							},
 							"stopOnEntry": {
 								"type": "boolean",

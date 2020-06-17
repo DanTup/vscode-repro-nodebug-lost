@@ -4,10 +4,10 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
-import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
-import { MockDebugSession } from './mockDebug';
 import * as Net from 'net';
+import * as vscode from 'vscode';
+import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder } from 'vscode';
+import { MockDebugSession } from './mockDebug';
 
 /*
  * The compile time flag 'runMode' controls how the debug adapter is run.
@@ -17,11 +17,17 @@ const runMode: 'external' | 'server' | 'inline' = 'inline';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	context.subscriptions.push(vscode.commands.registerCommand('extension.mock-debug.getProgramName', config => {
-		return vscode.window.showInputBox({
-			placeHolder: "Please enter the name of a markdown file in the workspace folder",
-			value: "readme.md"
-		});
+	context.subscriptions.push(vscode.commands.registerCommand('extension.mock-debug.runWithoutDebugging', config => {
+		vscode.debug.startDebugging(
+			vscode.workspace.workspaceFolders![0],
+			{
+				name: "Mock",
+				request: "launch",
+				type: "mock",
+				program: '${file}',
+				noDebug: true,
+			},
+		);
 	}));
 
 	// register a configuration provider for 'mock' debug type
@@ -71,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// run the debug adapter as a separate process
 			factory = new DebugAdapterExecutableFactory();
 			break;
-		}
+	}
 
 	context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('mock', factory));
 	if ('dispose' in factory) {
@@ -100,6 +106,9 @@ class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
 	 * e.g. add all missing attributes to the debug configuration.
 	 */
 	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		if (!config.noDebug) {
+			vscode.window.showErrorMessage(`noDebug was not set to true when resolving debug config, despite being passed`);
+		}
 
 		// if launch.json is missing or empty
 		if (!config.type && !config.request && !config.name) {
